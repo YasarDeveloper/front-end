@@ -1,0 +1,22 @@
+.toggle-wrapper {
+    display: flex;
+    border: 2px solid #2c465d;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.toggle-option {
+    flex-grow: 1;
+    text-align: center;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #FFFFFF;
+    color: #213343;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.toggle-option.selected {
+    background-color: #213343;
+    color: #FFFFFF;
+    font-weight: bold;
+}

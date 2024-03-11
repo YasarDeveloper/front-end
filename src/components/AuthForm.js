@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import "../styles/AuthForm.css";
+
 
 const AuthForm = ({ onClose, onAuthSuccess }) => {
     const [isLogin, setIsLogin] = useState(true);
@@ -7,6 +8,7 @@ const AuthForm = ({ onClose, onAuthSuccess }) => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [isSelected, setIsSelected] = useState('login');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -55,7 +57,7 @@ const AuthForm = ({ onClose, onAuthSuccess }) => {
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Login successful:', data);
-                    onAuthSuccess(data.userId);
+                    onAuthSuccess(data);
                 } else {
                     const errorData = await response.json();
                     console.error('Login failed:', errorData);
@@ -68,9 +70,20 @@ const AuthForm = ({ onClose, onAuthSuccess }) => {
 
     return (
         <div>
-            <button onClick={() => setIsLogin(!isLogin)}>
-                Switch to {isLogin ? 'Register' : 'Login'}
-            </button>
+            <div className="toggle-wrapper">
+                <div
+                    className={`toggle-option ${ isLogin ? 'selected' : ''}`}
+                    onClick={() => setIsLogin(true)}
+                >
+                    Login
+                </div>
+                <div
+                    className={`toggle-option ${ !isLogin ? 'selected' : ''}`}
+                    onClick={() => setIsLogin(false)}
+                >
+                    Register
+                </div>
+            </div>
             <form onSubmit={handleSubmit}>
                 <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Username" required />
                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />

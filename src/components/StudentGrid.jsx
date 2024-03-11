@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import "../styles/StudentStyle.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTable, faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTable, faPencilAlt, faTrash, faUser, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import Modal from "react-modal";
 import StudentForm from './StudentForm';
 import { getStudentData, deleteData, updateData } from '../services/StudentService.js';
 import AuthForm from './AuthForm';
-import axios from 'axios';
+import "../styles/StudentGrid.css";
 
 Modal.setAppElement("#root");
 
@@ -20,6 +20,9 @@ const StudentList = () => {
     const [selectdIndex, setselectdIndex] = useState(-1);
     const [isAuthFormVisible, setAuthFormVisible] = useState(false);
     const [userId, setUserId] = useState(null);
+    const [userName, setUserName] = useState(null);
+    const [showMessage, setShowMessage] = useState(false);
+    const [messageText, setMessageText] = useState('');
 
     useEffect(() => {
         getStudentData()
@@ -37,29 +40,36 @@ const StudentList = () => {
         setEditableRow(index);
     };
 
-    const handleAuthSuccess = (userId) => {
+    const handleAuthSuccess = (userData) => {
         setAuthFormVisible(false);
-        setUserId(userId)
-        console.log("----------------------------", userId)
+        setUserId(userData.userId || null)
+        setUserName(userData.userName || null)
         getStudentData()
             .then(data => {
                 setInitialData(data);
                 setData(data);
             })
-        // Additional actions post-auth, like hiding login/register option
+        setMessageText(` ${ userId == null ? 'Login' : 'Register' } successfully!`);
+        setShowMessage(true);
+        setTimeout(() => {
+            setShowMessage(false);
+        }, 2000);
     };
 
     const handleDelete = async (index, recordId) => {
-        // Display confirmation dialog
         const isConfirmed = window.confirm("Are you sure you want to delete this record?");
 
-        // Check if the user confirmed the deletion
         if (isConfirmed) {
             try {
                 await deleteData(recordId);
                 const updatedData = [...data];
                 updatedData.splice(index, 1);
                 setData(updatedData);
+                setMessageText('Deleted successfully!');
+                setShowMessage(true);
+                setTimeout(() => {
+                    setShowMessage(false);
+                }, 2000);
             } catch (error) {
                 console.error('Error deleting data:', error);
             }
@@ -76,6 +86,11 @@ const StudentList = () => {
             console.log(updatedData);
             await updateData(updatedData, id)
             setEditableRow(null);
+            setMessageText('Updated successfully!');
+            setShowMessage(true);
+            setTimeout(() => {
+                setShowMessage(false);
+            }, 2000);
             getStudentData()
                 .then(data => {
                     setInitialData(data);
@@ -125,6 +140,12 @@ const StudentList = () => {
                     .catch(error => {
                         console.error('Error fetching data:', error);
                     });
+                closeForm()
+                setMessageText('Student Added successfully!');
+                setShowMessage(true);
+                setTimeout(() => {
+                    setShowMessage(false);
+                }, 2000);
             } else {
                 console.error('Failed to submit student data');
             }
@@ -134,8 +155,11 @@ const StudentList = () => {
     };
 
     return (
-        <div>
-            {userId === null && <p onClick={() => setAuthFormVisible(true)}>Login/Register</p>}
+        <div className='student-grid'>
+            <div className='profile'>
+                {userId === null && <p className='click' onClick={() => setAuthFormVisible(true)}>Login/Register</p>}
+                <p className='profile-name' ><FontAwesomeIcon icon={faUser} /> {userName || 'Guest'} </p>
+            </div>
             <Modal
                 isOpen={isAuthFormVisible}
                 onRequestClose={() => setAuthFormVisible(false)}
@@ -156,12 +180,12 @@ const StudentList = () => {
                     },
                 }}
             >
-                <AuthForm onClose={() => setAuthFormVisible(false)} onAuthSuccess={(userId) => handleAuthSuccess(userId)} />
+                <AuthForm onClose={() => setAuthFormVisible(false)} onAuthSuccess={(userData) => handleAuthSuccess(userData)} />
 
             </Modal>
             <h1>Student List</h1>
-            <p className="add" onClick={() => handleAdd()}>
-                Add
+            <p className="add click" onClick={() => handleAdd()}>
+                <FontAwesomeIcon icon={faPlusCircle} /> Add
             </p>
             <Modal
                 isOpen={isFormVisible}
@@ -191,11 +215,11 @@ const StudentList = () => {
                     <tr>
                         <th>View</th>
                         <th>Edit</th>
-                        <th>Del</th>
+                        <th>Delete</th>
                         <th>Student Name</th>
                         <th>Age</th>
-                        <th>Created User Name</th>
-                        <th>Updated User Name</th>
+                        <th>Created Use</th>
+                        <th>Updated User</th>
                         <th>Subject 1</th>
                         <th>Mark 1</th>
                         <th>Subject 2</th>
@@ -205,13 +229,13 @@ const StudentList = () => {
                 <tbody>
                     {data.map((item, index) => (
                         <tr key={index}>
-                            <td>
+                            <td className='FontAwesomeIcon'>
                                 <FontAwesomeIcon icon={faTable} onClick={() => handleAdd(index, item.id)} />
-                            </td>
-                            <td>
+                            </td >
+                            <td className='FontAwesomeIcon'>
                                 <FontAwesomeIcon icon={faPencilAlt} onClick={() => handleEdit(index)} />
                             </td>
-                            <td>
+                            <td className='FontAwesomeIcon'>
                                 <FontAwesomeIcon icon={faTrash} onClick={() => handleDelete(index, item.id)} />
                             </td>
                             {editableRow === index ? (
@@ -266,7 +290,18 @@ const StudentList = () => {
                                             }}
                                         />
                                     </td>
-
+                                    <td>
+                                        <input
+                                            type="text"
+                                            name="Subject2"
+                                            value={data[index].subject2}
+                                            onChange={(e) => {
+                                                const updatedData = [...data];
+                                                updatedData[index].subject2 = e.target.value;
+                                                setData(updatedData);
+                                            }}
+                                        />
+                                    </td>
                                     <td>
                                         <input
                                             type="text"
@@ -279,8 +314,8 @@ const StudentList = () => {
                                             }}
                                         />
                                     </td>
-                                    <td>
-                                        <button onClick={() => handleSave(index)}>Save</button>
+                                    <td className='save-row'>
+                                        <button className='save-button' onClick={() => handleSave(index)}>Save</button>
                                     </td>
                                 </>
                             ) : (
@@ -293,13 +328,17 @@ const StudentList = () => {
                                     <td>{item.mark1}</td>
                                     <td>{item.subject2}</td>
                                     <td>{item.mark2}</td>
-                                    <td></td>
                                 </>
                             )}
                         </tr>
                     ))}
                 </tbody>
             </table>
+            {showMessage && (
+                <div className={`message-box ${!showMessage ? 'hidden' : ''}`}>
+                    {messageText}
+                </div>
+            )}
         </div>
     );
 }
